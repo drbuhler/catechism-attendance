@@ -149,6 +149,7 @@ def main():
     os.chmod(tmpf, 0o644)
     os.replace(tmpf, out)
     print(f"Wrote {out}", file=sys.stderr)
+    print("NOTE: extra passcodes were reset; re-run tools/add_passcode.py for each one.", file=sys.stderr)
     print(be.summarize(weeks, people), file=sys.stderr)
     print("older record: " + ", ".join(f"{k} {v}" for k, v in ostats.items()), file=sys.stderr)
     print(f"overrides: {len(ov_block.get('renames', {}))} old spellings merged, {len(ov_block.get('notSame', []))} not-same pairs, "
