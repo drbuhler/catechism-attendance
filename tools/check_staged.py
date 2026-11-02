@@ -28,8 +28,16 @@ def check_enc(raw: bytes):
         j = json.loads(raw)
     except Exception:
         return "data.enc.json is not valid JSON"
-    if set(j) != {"v", "salt", "iv", "iter", "ct"}:
-        return "data.enc.json must contain only v, salt, iv, iter, ct"
+    if set(j) - {"keys"} != {"v", "salt", "iv", "iter", "ct"}:
+        return "data.enc.json must contain only v, salt, iv, iter, ct (and optional keys)"
+    for k in j.get("keys", []):  # extra passcodes: wrapped 32-byte key only (ct = 32 + 16 tag bytes)
+        try:
+            if (not isinstance(k, dict) or set(k) != {"salt", "iv", "iter", "ct"} or not isinstance(k["iter"], int) or k["iter"] < 600_000
+                    or len(base64.b64decode(k["salt"], validate=True)) != 16 or len(base64.b64decode(k["iv"], validate=True)) != 12
+                    or len(base64.b64decode(k["ct"], validate=True)) != 48):
+                return "data.enc.json keys[] entry malformed"
+        except Exception:
+            return "data.enc.json keys[] not base64"
     if not isinstance(j["iter"], int) or j["iter"] < 600_000:
         return "data.enc.json iteration count below 600000"
     try:
